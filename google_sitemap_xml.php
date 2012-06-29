@@ -28,7 +28,7 @@
 *(4) open with your browser
 *(5) open sitemap.xml and check content
 *
-*// transfer to google
+* / transfer to google
 *
 *(1) open www.google.com/webmasters/tools
 *(2) log in with your account
@@ -36,7 +36,7 @@
 *(4) "XML-Sitemaps" -> "add Sitemap"
 *(5) specify URL of your sitemap.xml
 * =====================================================================
-
+*/
 // init
 $mod_cnf                        = array();
 $error                          = array();
