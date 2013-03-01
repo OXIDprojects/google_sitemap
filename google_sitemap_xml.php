@@ -46,15 +46,30 @@ $xmlList_cat                    = array();
 $xmlList_cms                    = array();
 $xmlList_prod                   = array();
 
+/** Shop-Configuration wrapper */
+class ShopConfig{
+    public function __construct() {
+		include_once('config.inc.php');
+		
+		/* append sShopURL with / */
+		if ((substr($this->sShopURL, -strlen($this->sShopURL)) !== "/")){
+			$this->sShopURL .= "/";
+		}
+	}
+}
+
+$shopConfig = new ShopConfig();
+
+
 // configuration
-$mod_cnf['filepath']            = './';                          // fullpath to sitemaps
-$mod_cnf['filename']            = 'sitemap-de';                  // basename for sitemaps
-$mod_cnf['offset']              = 20000;                         // how many product-urls in each sitemap? (max. allowed: 50.000 urls (total, with cats and cms) && max. filesize: 10Mb (uncompressed!))         
-$mod_cnf['siteurl']             = 'http://www.my-domain.tld/';   // shop url (with ending slash!)
-$mod_cnf['dbhost']              = 'localhost';                   // dbhost
-$mod_cnf['dbname']              = 'insert db_name';              // dbname            
-$mod_cnf['dbuser']              = 'insert db_user';              // dbuser
-$mod_cnf['dbpass']              = 'insert db_password';          // dbpass
+$mod_cnf['filepath']            = './';				// fullpath to sitemaps
+$mod_cnf['filename']            = 'sitemap-de';			// basename for sitemaps
+$mod_cnf['offset']              = 20000;			// how many product-urls in each sitemap? (max. allowed: 50.000 urls (total, with cats and cms) && max. filesize: 10Mb (uncompressed!))         
+$mod_cnf['siteurl']             = $shopConfig->sShopURL;	// shop url (with ending slash!)
+$mod_cnf['dbhost']              = $shopConfig->dbHost;		// dbhost
+$mod_cnf['dbname']              = $shopConfig->dbName;		// dbname            
+$mod_cnf['dbuser']              = $shopConfig->dbUser;		// dbuser
+$mod_cnf['dbpass']              = $shopConfig->dbPwd;          	// dbpass
 
 // which run?: script calls with '-c [n]'
 // first run (without params) -> call #1
