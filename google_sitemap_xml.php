@@ -1,25 +1,13 @@
 <?php
 /**
-* Google Sitemap Xml v.0.1
-* --------------------------------
-* oxid ESales - SEO
-* --------------------------------
-* by DIATOM Internet & Medien GmbH
-* --------------------------------
-* c: 27.07.2009 | u: 27.07.2009
+* Google XML Sitemap
+* -----------------------------------------------
+* https://github.com/proudcommerce/google_sitemap
+* -----------------------------------------------
+* by DIATOM Internet & Medien GmbH // 27.07.2009
+* by Proud Sourcing GmbH // 19.07.2013
+* -----------------------------------------------
 *
-* =====================================================================
-* modified by: 010|nullzehn - digitale medien @2010-01-23:
-* - creating multiple sitemaps for large shops
-* - compress sitemaps (gzip)
-* - recalls self to avoid memory breaks
-* - run as a cronjob or manually in cli
-*
-* you can call the script by crontab: "googlesitemap.sh -c 1"
-* (or without params if you like)
-* therefore add "#! /usr/bin/php -q " before the <?php in first line and 
-* save as googlesitemap.sh
-* =====================================================================
 * / install
 *
 *(1) insert your paths and data below //configuration
@@ -37,6 +25,7 @@
 *(5) specify URL of your sitemap.xml
 * =====================================================================
 */
+
 // init
 $mod_cnf                        = array();
 $error                          = array();
@@ -44,32 +33,55 @@ $xmlInsert                      = array();
 $xmlList                        = array();
 $xmlList_cat                    = array();
 $xmlList_cms                    = array();
+$xmlList_vendor                 = array();
+$xmlList_manufacturer           = array();
+$xmlList_tags                   = array();
+$xmlList_static                 = array();
 $xmlList_prod                   = array();
+$xmlList_prod_vendor            = array();
+$xmlList_prod_manufacturer      = array();
 
-/** Shop-Configuration wrapper */
-class ShopConfig{
-    public function __construct() {
-		include_once('config.inc.php');
-		
-		/* append sShopURL with / */
-		if ((substr($this->sShopURL, -strlen($this->sShopURL)) !== "/")){
-			$this->sShopURL .= "/";
-		}
-	}
+// Shop-Configuration wrapper
+class ShopConfig
+{
+    public function __construct()
+    {
+        include_once('config.inc.php');
+
+        /* append sShopURL with / */
+        if ((substr($this->sShopURL, -strlen($this->sShopURL)) !== "/")){
+                $this->sShopURL .= "/";
+        }
+    }
 }
-
 $shopConfig = new ShopConfig();
 
-
-// configuration
-$mod_cnf['filepath']            = './';				// fullpath to sitemaps
-$mod_cnf['filename']            = 'sitemap-de';			// basename for sitemaps
-$mod_cnf['offset']              = 20000;			// how many product-urls in each sitemap? (max. allowed: 50.000 urls (total, with cats and cms) && max. filesize: 10Mb (uncompressed!))         
+// configuration database
 $mod_cnf['siteurl']             = $shopConfig->sShopURL;	// shop url (with ending slash!)
 $mod_cnf['dbhost']              = $shopConfig->dbHost;		// dbhost
 $mod_cnf['dbname']              = $shopConfig->dbName;		// dbname            
 $mod_cnf['dbuser']              = $shopConfig->dbUser;		// dbuser
-$mod_cnf['dbpass']              = $shopConfig->dbPwd;          	// dbpass
+$mod_cnf['dbpass']              = $shopConfig->dbPwd;       // dbpass
+
+// configuration data
+$mod_cnf['filepath']            = './';						// fullpath to sitemaps
+$mod_cnf['filename']            = 'sitemap';				// basename for sitemaps
+$mod_cnf['offset']              = 20000;					// how many product-urls in each sitemap? (max. allowed: 50.000 urls (total, with cats and cms) && max. filesize: 10Mb (uncompressed!))         
+$mod_cnf['language']            = 0;                        // shop language id
+$mod_cnf['expired']             = true;                     // true for using also oxseo.oxexpired = 1 (normally only oxseo.oxexpired = 0)
+
+// configuration export
+$mod_cnf['export_categories']   = true;                     // export categories?
+$mod_cnf['export_products']     = true;                     // export products?
+$mod_cnf['export_products_ma']  = true;                     // export manufacturer products?
+$mod_cnf['export_products_ve']  = true;                     // export vendor products?
+$mod_cnf['export_cms']          = true;                     // export cms pages?
+$mod_cnf['export_vendor']       = true;                     // export vendors?
+$mod_cnf['export_manufcaturer'] = true;                     // export manufacturers?
+$mod_cnf['export_tags']         = true;                     // export tags?
+$mod_cnf['export_static']       = true;                      // export static seo urls?
+
+/* ----------------- DO NOT EDIT ANYTHING BEHIND THIS LINE ----------------- */
 
 // which run?: script calls with '-c [n]'
 // first run (without params) -> call #1
@@ -101,24 +113,69 @@ $cntCalls = ceil(getCountScriptCalls() / $mod_cnf['offset']);
 if (1 == $pcall)
 {
     // get cms data from shop - only at first script-run! (-c 1)
-    $xmlList_cms = getCmsSite();
+    if($mod_cnf['export_cms'])
+    {
+        $xmlList_cms = getCmsSite();
+    }
    
+    // get vendor data from shop - only at first script-run! (-c 1)
+    if($mod_cnf['export_vendor'])
+    {
+        $xmlList_vendor = getVendors();
+    }
+    
+    // get manufcaturer data from shop - only at first script-run! (-c 1)
+    if($mod_cnf['export_manufcaturer'])
+    {
+        $xmlList_manufacturer = getManufacturers();    
+    }
+    
+    // get manufcaturer data from shop
+    if($mod_cnf['export_tags'])
+    {
+        $xmlList_tags = getTags();  
+    }
+    
+    // get static seo data from shop
+    if($mod_cnf['export_static'])
+    {
+        $xmlList_static = getStaticUrls();  
+    }    
+    
     // get all categories
-    $xmlList_cat = getCategories();
+    if($mod_cnf['export_categories'])
+    {
+        $xmlList_cat = getCategories();
+    }
+    
+    // get vendor products
+    if($mod_cnf['export_products_ve'])
+    {
+        $xmlList_prod_vendor = getProductsVendor();
+    }
+
+    // get manufacturer products
+    if($mod_cnf['export_products_ma'])
+    {
+        $xmlList_prod_manufacturer = getProductsManufacturer();    
+    }
 }
 
 // get products (with offset)
-$xmlList_prod = getProducts($pcall);
+if($mod_cnf['export_products'])
+{
+    $xmlList_prod = getProducts($pcall);
+}
 
 // build xml-data and output
-$xmlList = array_merge($xmlList_prod, $xmlList_cat, $xmlList_cms);
+$xmlList = array_merge($xmlList_prod, $xmlList_prod_vendor, $xmlList_prod_manufacturer, $xmlList_cat, $xmlList_cms, $xmlList_vendor, $xmlList_manufacturer, $xmlList_tags, $xmlList_static);
 
 // create sitemap
 $sitemapdata = createSitemap($xmlList);
 $smfile = createXmlFile($sitemapdata);
 
 // compress sitemap
-compressSitemapFile($smfile);
+#compressSitemapFile($smfile);
 
 // create global sitemaps-index-file (watch sitemaps.org for more infos..)
 createSitemapIndex();
@@ -127,7 +184,7 @@ createSitemapIndex();
 if ($pcall < $cntCalls)
 {
     // memory seems to hold list-array-values, maybe depends on local environment
-    unset($xmlList,$xmlList_cat,$xmlList_cms,$xmlList_prod);
+    unset($xmlList,$xmlList_cat,$xmlList_cms,$xmlList_vendor,$xmlList_manufacturer,$xmlList_tags,$xmlList_prod, $xmlList_prod_manufacturer,$xmlList_prod_vendor,$xmlList_static);
    
     // call itself
     $exec = './googlesitemap.sh -c '.($pcall+1);
@@ -160,14 +217,15 @@ function getCategories()
                 oxcats.oxhidden = 0 AND
                 seo.oxtype='oxcategory' AND
                 seo.oxstdurl NOT LIKE ('%pgNr=%') AND
-                seo.oxlang = 0
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxlang = ".$mod_cnf['language']."               
             GROUP BY
                 oxcats.oxid;";
     $sql_query = mysql_query($sql);
     while ($sql_row = mysql_fetch_array($sql_query))
     {
         $list[] = array(
-            'loc'           => $mod_cnf['siteurl'] . strtolower($sql_row['oxseourl']),
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
             'priority'      => '1.0',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
@@ -195,7 +253,8 @@ function getCmsSite()
                 content.oxfolder = ''
                 AND seo.oxseourl <> ''
                 AND seo.oxseourl NOT LIKE ('%META%')
-                AND seo.oxlang = 0
+                ".($mod_cnf['expired'] == true ? '': 'AND seo.oxexpired = 0')."
+                AND seo.oxlang = ".$mod_cnf['language']."
             GROUP BY
                 content.oxid;";
    
@@ -203,8 +262,143 @@ function getCmsSite()
     while ($sql_row = mysql_fetch_array($sql_query))
     {
         $list[] = array(
-            'loc'           => $mod_cnf['siteurl'] . strtolower($sql_row['oxseourl']),
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
             'priority'      => '1.0',
+            'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
+            'changefreq'    => 'weekly',
+        );
+    }
+    mysql_free_result($sql_query);
+    return $list;
+}
+
+/** get active vendors from database
+ * @return array
+ */
+function getVendors()
+{
+    global $mod_cnf;
+    $list = array();
+    $sql = "SELECT
+                seo.oxseourl
+            FROM
+                oxvendor as vendor
+            LEFT JOIN
+                oxseo as seo ON (vendor.oxid=seo.oxobjectid)
+            WHERE
+                vendor.oxactive = 1 AND
+                seo.oxseourl <> '' AND
+                seo.oxtype='oxvendor' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxlang = ".$mod_cnf['language']."
+            GROUP BY
+                vendor.oxid;";
+   
+    $sql_query = mysql_query($sql);
+    while ($sql_row = mysql_fetch_array($sql_query))
+    {
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
+            'priority'      => '3.0',
+            'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
+            'changefreq'    => 'weekly',
+        );
+    }
+    mysql_free_result($sql_query);
+    return $list;
+}
+
+/** get active manufacturers from database
+ * @return array
+ */
+function getManufacturers()
+{
+    global $mod_cnf;
+    $list = array();
+    $sql = "SELECT
+                seo.oxseourl
+            FROM
+                oxmanufacturers as manufacturer
+            LEFT JOIN
+                oxseo as seo ON (manufacturer.oxid=seo.oxobjectid)
+            WHERE
+                manufacturer.oxactive = 1 AND
+                seo.oxseourl <> '' AND
+                seo.oxtype='oxmanufacturer' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxlang = ".$mod_cnf['language']."
+            GROUP BY
+                manufacturer.oxid;";
+   
+    $sql_query = mysql_query($sql);
+    while ($sql_row = mysql_fetch_array($sql_query))
+    {
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
+            'priority'      => '3.0',
+            'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
+            'changefreq'    => 'weekly',
+        );
+    }
+    mysql_free_result($sql_query);
+    return $list;
+}
+
+/** get active manufacturers from database
+ * @return array
+ */
+function getTags()
+{
+    global $mod_cnf;
+    $list = array();
+    $sql = "SELECT
+                seo.oxseourl
+            FROM
+                oxseo seo
+            WHERE
+                seo.oxseourl <> '' AND
+                seo.oxstdurl LIKE '%=tag%' AND
+                seo.oxtype='dynamic' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxlang = ".$mod_cnf['language'];
+   
+    $sql_query = mysql_query($sql);
+    while ($sql_row = mysql_fetch_array($sql_query))
+    {
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
+            'priority'      => '5.0',
+            'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
+            'changefreq'    => 'weekly',
+        );
+    }
+    mysql_free_result($sql_query);
+    return $list;
+}
+
+/** get static seo urls from database
+ * @return array
+ */
+function getStaticUrls()
+{
+    global $mod_cnf;
+    $list = array();
+    $sql = "SELECT
+                seo.oxseourl
+            FROM
+                oxseo seo
+            WHERE
+                seo.oxseourl <> '' AND
+                seo.oxtype='static' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxlang = ".$mod_cnf['language'];
+   
+    $sql_query = mysql_query($sql);
+    while ($sql_row = mysql_fetch_array($sql_query))
+    {
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
+            'priority'      => '7.0',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -246,8 +440,9 @@ function getProducts($limit)
                 oxart.oxactive = 1 AND
                 oxcat.oxactive = 1 AND
                 oxcat.oxhidden = 0 AND
-                seo.oxlang = 0 AND
+                seo.oxlang = ".$mod_cnf['language']." AND
                 seo.oxtype='oxarticle' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
                 seo.oxstdurl LIKE ('%cnid=%')
             GROUP BY
                 oxart.oxid
@@ -257,13 +452,99 @@ function getProducts($limit)
     while ($sql_row = mysql_fetch_array($sql_query))
     {
         $lastmod = $sql_row['oxtimestamp'];
-if ("0000-00-00 00:00:00" == $lastmod)
-{
-$lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        if ("0000-00-00 00:00:00" == $lastmod)
+        {
+        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        }
+        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
+            'priority'      => '0.5',
+            'lastmod'       => $lastmod,
+            'changefreq'    => 'daily',
+        );
+    }
+    mysql_free_result($sql_query);
+    return $list;
 }
-$lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
-$list[] = array(
-            'loc'           => $mod_cnf['siteurl'] . strtolower($sql_row['oxseourl']),
+
+/** get manufacturer product urls from database
+ * @return array
+ */
+function getProductsManufacturer()
+{
+    global $mod_cnf;
+    $list = array();
+               
+    $sql = "SELECT
+                seo.oxseourl
+            FROM
+                oxarticles as oxart
+            LEFT JOIN oxseo as seo
+                ON (oxart.oxid = seo.oxobjectid)
+            WHERE
+                oxart.oxactive = 1 AND
+                seo.oxlang = ".$mod_cnf['language']." AND
+                seo.oxtype='oxarticle' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxstdurl LIKE ('%mnid=%')
+            GROUP BY
+                oxart.oxid";
+                       
+    $sql_query = mysql_query($sql);
+    while ($sql_row = mysql_fetch_array($sql_query))
+    {
+        $lastmod = $sql_row['oxtimestamp'];
+        if ("0000-00-00 00:00:00" == $lastmod)
+        {
+        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        }
+        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
+            'priority'      => '0.5',
+            'lastmod'       => $lastmod,
+            'changefreq'    => 'daily',
+        );
+    }
+    mysql_free_result($sql_query);
+    return $list;
+}
+
+/** get vendor product urls from database
+ * @return array
+ */
+function getProductsVendor()
+{
+    global $mod_cnf;
+    $list = array();
+               
+    $sql = "SELECT
+                seo.oxseourl
+            FROM
+                oxarticles as oxart
+            LEFT JOIN oxseo as seo
+                ON (oxart.oxid = seo.oxobjectid)
+            WHERE
+                oxart.oxactive = 1 AND
+                seo.oxlang = ".$mod_cnf['language']." AND
+                seo.oxtype='oxarticle' AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxstdurl LIKE ('%cnid=v%')
+            GROUP BY
+                oxart.oxid";
+                       
+    $sql_query = mysql_query($sql);
+    while ($sql_row = mysql_fetch_array($sql_query))
+    {
+        $lastmod = $sql_row['oxtimestamp'];
+        if ("0000-00-00 00:00:00" == $lastmod)
+        {
+        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        }
+        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        $list[] = array(
+            'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
             'priority'      => '0.5',
             'lastmod'       => $lastmod,
             'changefreq'    => 'daily',
@@ -293,7 +574,8 @@ function getCountScriptCalls()
                 oxart.oxactive = 1 AND
                 oxcat.oxactive = 1 AND
                 oxcat.oxhidden = 0 AND
-                seo.oxlang = 0 AND
+                ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
+                seo.oxlang = ".$mod_cnf['language']." AND
                 seo.oxtype='oxarticle'
             GROUP BY
                 oxart.oxid;";
@@ -316,6 +598,8 @@ function createSitemap($data)
     }
    
     $mapdata[] = '</urlset>';
+    // print sitemap data
+    #print_r($mapdata);
     return $mapdata;
 }
 
@@ -357,7 +641,7 @@ function createSitemapIndex()
     $smindex = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     for ($i=1;$i<=$pcall;$i++)
     {
-        $loc = '<loc>'.$mod_cnf['siteurl'].$mod_cnf['filename'].$i.'.xml.gz</loc>';
+        $loc = '<loc>'.$mod_cnf['siteurl'].$mod_cnf['filename'].$i.'.xml</loc>';
         $last = '<lastmod>'.date("Y-m-d").'T'.date("H:i:s").'+00:00</lastmod>';
         $sitemaps[] = '<sitemap>'.$loc.$last.'</sitemap>';
     }
