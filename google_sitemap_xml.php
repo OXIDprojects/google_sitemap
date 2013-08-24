@@ -351,7 +351,7 @@ function createSitemapIndex()
     $sitemapindex = $maps . "\n</sitemapindex>";
    
     // write to file
-    @file_put_contents($mod_cnf['filename'].'.xml',$sitemapindex);
+    @file_put_contents($mod_cnf['filepath'].$mod_cnf['filename'].'.xml',$sitemapindex);
     return;
 }
 
