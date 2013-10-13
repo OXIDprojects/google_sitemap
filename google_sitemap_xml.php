@@ -299,7 +299,7 @@ function getVendors()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '3.0',
+            'priority'      => '0.3',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -335,7 +335,7 @@ function getManufacturers()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '3.0',
+            'priority'      => '0.3',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
