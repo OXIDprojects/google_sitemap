@@ -263,7 +263,7 @@ function getCmsSite()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '1.0',
+            'priority'      => '0.6',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -299,7 +299,7 @@ function getVendors()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '0.3',
+            'priority'      => '0.7',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -335,7 +335,7 @@ function getManufacturers()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '0.3',
+            'priority'      => '0.7',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -367,7 +367,7 @@ function getTags()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '5.0',
+            'priority'      => '0.8',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -398,7 +398,7 @@ function getStaticUrls()
     {
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '7.0',
+            'priority'      => '0.5',
             'lastmod'       => date("Y-m-d") . 'T' . date("h:i:s") . '+00:00',
             'changefreq'    => 'weekly',
         );
@@ -459,7 +459,7 @@ function getProducts($limit)
         $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '0.5',
+            'priority'      => '1.0',
             'lastmod'       => $lastmod,
             'changefreq'    => 'daily',
         );
@@ -502,7 +502,7 @@ function getProductsManufacturer()
         $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '0.5',
+            'priority'      => '0.9',
             'lastmod'       => $lastmod,
             'changefreq'    => 'daily',
         );
@@ -545,7 +545,7 @@ function getProductsVendor()
         $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
-            'priority'      => '0.5',
+            'priority'      => '0.9',
             'lastmod'       => $lastmod,
             'changefreq'    => 'daily',
         );
