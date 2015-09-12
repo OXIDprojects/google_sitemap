@@ -480,7 +480,8 @@ function getProductsManufacturer()
     $list = array();
                
     $sql = "SELECT
-                seo.oxseourl
+                oxart.oxtimestamp,
+                seo.oxseourl,
             FROM
                 oxarticles as oxart
             LEFT JOIN oxseo as seo
