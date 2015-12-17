@@ -454,9 +454,12 @@ function getProducts($limit)
         $lastmod = $sql_row['oxtimestamp'];
         if ("0000-00-00 00:00:00" == $lastmod)
         {
-        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+            $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
         }
-        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        else
+        {
+            $lastmod = $lastmod = str_replace(" ", "T", $lastmod) . '+00:00';
+        }
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
             'priority'      => '1.0',
@@ -477,7 +480,8 @@ function getProductsManufacturer()
     $list = array();
                
     $sql = "SELECT
-                seo.oxseourl
+                oxart.oxtimestamp,
+                seo.oxseourl,
             FROM
                 oxarticles as oxart
             LEFT JOIN oxseo as seo
@@ -497,9 +501,12 @@ function getProductsManufacturer()
         $lastmod = $sql_row['oxtimestamp'];
         if ("0000-00-00 00:00:00" == $lastmod)
         {
-        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+            $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
         }
-        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        else
+        {
+            $lastmod = $lastmod = str_replace(" ", "T", $lastmod) . '+00:00';
+        }
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
             'priority'      => '0.9',
@@ -540,9 +547,12 @@ function getProductsVendor()
         $lastmod = $sql_row['oxtimestamp'];
         if ("0000-00-00 00:00:00" == $lastmod)
         {
-        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+            $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
         }
-        $lastmod = date("Y-m-d") . 'T' . date("h:i:s") . '+00:00';
+        else
+        {
+            $lastmod = $lastmod = str_replace(" ", "T", $lastmod) . '+00:00';
+        }
         $list[] = array(
             'loc'           => $mod_cnf['siteurl'] . $sql_row['oxseourl'],
             'priority'      => '0.9',
