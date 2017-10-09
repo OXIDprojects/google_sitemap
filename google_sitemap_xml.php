@@ -445,7 +445,7 @@ function getProducts($limit)
                 ".($mod_cnf['expired'] == true ? '': 'seo.oxexpired = 0 AND ')."
                 seo.oxstdurl LIKE ('%cnid=%')
             GROUP BY
-                oxart.oxid
+                seo.oxseourl
             LIMIT ".$start." OFFSET ".$end.";";
                        
     $sql_query = mysql_query($sql);
